@@ -1,0 +1,31 @@
+id: abpair-rb2
+keep_ready_minutes: 10
+description: >
+  Re-blocking augmentation retested at MATCHED OPTIMIZER UPDATES. rb1's K=2 arm trained 3x the
+  data for the same 14 epochs -- 3x the updates -- and 22 epochs was already measured to overfit,
+  so that arm measured exposure, not re-blocking. Arms here hold updates ~constant
+  (K0/14ep, K2/5ep, K6/2ep) plus one deliberately over-budget arm (K6/6ep) to separate
+  "re-blocking helps" from "more updates help". All at the promoted edrop 0.45, 4 seeds.
+entrypoint: bash -lc "pip install -q 'transformers==4.44.2' 'tokenizers<0.20' rjieba sentencepiece pandas && python working/runs/rb2/run.py"
+dataset: abpair-public
+compute:
+  type: gpu
+  profile: balanced
+  min_vram_gb: 24
+  preferred_gpu_models:
+    - NVIDIA A10G
+    - NVIDIA A10
+    - NVIDIA RTX A5000
+    - NVIDIA GeForce RTX 4090
+    - NVIDIA A40
+    - NVIDIA RTX A6000
+  min_ram_gb: 48
+  min_cpu_cores: 8
+  workspace_gb: 50
+  estimated_hours: 1.5
+limits:
+  max_runtime_hours: 2.5
+  max_cost_usd: 3.0
+artifacts:
+  save:
+    - metrics.json

@@ -9,12 +9,12 @@ single-cell-sequenced B cells, where the pairing has been scrambled.
 
 | | 5-fold sample-grouped CV |
 |---|---|
-| OOF adjusted (all rows) | **0.5739** |
-| OOF adjusted (human rows only — the test set is 100% human) | **0.6067** |
-| Chance / `sample_submission.csv` | 0.0 |
+| OOF adjusted (all rows) | **0.5904** |
+| OOF adjusted (human rows only — the test set is 100% human) | **0.6221** |
+| Top-1 accuracy | 42.9% (chance 12.5%) |
+| `sample_submission.csv` / chance | 0.0 |
 
-Expected platform score ≈ **0.585**, from `0.75 * 0.5979 + 0.25 * 0.546`, where the second
-term is the 5th percentile of a simulated 7-sample held-out family.
+Cold-run verified: RTX A6000, exit 0, 20.0 min, 4096 valid rows.
 
 ## Mechanism
 
@@ -33,13 +33,13 @@ other. But the two chains of *one* cell share a history, and three signals carry
    label and the model over-trusts a feature that is weaker at inference.
 3. **Pretrained sequence representation**. Frozen embeddings from three encoders concatenated
    (AntiBERTa2 202M, IgBert 420M, ESM-2 650M), pooled twice per chain — whole chain and CDR3
-   span — entering through learned projections and a bilinear interaction.
+   span.
 
 ## Decoding
 
 The block is a bijection, so it is a permutation model over pairwise log-potentials. The metric
 pays `(8-rank)/7`, which is maximised by ranking candidates by their **true marginal posterior**
-`P(pi(i)=j)`. With n=8 that marginal is computed *exactly* via Ryser's formula (64 permanents of
+`P(π(i)=j)`. With n=8 that marginal is computed *exactly* via Ryser's formula (64 permanents of
 7×7 minors per block, 2.2 s for 3797 blocks) instead of being approximated by Sinkhorn.
 
 ## What moved the score
@@ -47,24 +47,42 @@ pays `(8-rank)/7`, which is maximised by ranking candidates by their **true marg
 | step | OOF adj |
 |---|---|
 | v1 features, Sinkhorn decode, 1 seed | 0.4628 |
-| probabilistic-surprisal SHM clock | 0.4441 — **rejected** |
-| per-position residue towers | ~0.43 — **rejected** (train 0.76 / val 0.45) |
-| two-anchor germline alignment | 0.342 single-feature vs 0.364 — **rejected** |
 | v3 features + exact leave-one-out lift tables | 0.4758 |
-| 3 seeds | 0.4794 |
 | exact permutation marginals (vs Sinkhorn) | 0.4850 |
 | + IgBert frozen embeddings | 0.5445 |
 | + AntiBERTa2 | 0.5552 |
 | + ESM-2 | 0.5650 |
-| + CDR3-span pooling | **0.5739** |
+| + CDR3-span pooling | 0.5739 |
+| + 16 seeds | 0.5852 |
+| + embedding dropout 0.45 | **0.5904** |
+
+## Fair negatives (measured, not assumed)
+
+| tried | result |
+|---|---|
+| Fine-tuning AntiBERTa2 end-to-end, embeddings substituted into the same model | 0.5968 vs 0.6026 frozen on fold 0; train loss 2.71→1.90, a 202M encoder memorising ~3000 blocks |
+| Probabilistic-surprisal SHM clock | 0.311 vs 0.364 — tracks germline allelic diversity, not mutation |
+| Two-anchor germline alignment on the conserved FR2 tryptophan | 0.342 vs 0.364 — CDR1/CDR2 lengths are germline-constant, so there was no drift to fix |
+| Two-pass consensus from the least-mutated half | identical at every keep fraction |
+| Per-position residue towers (VH/VL interface) | train 0.76 / val 0.45 |
+| Human-only training (mouse/rat rows score 0.06) | dead heat, 0.6077 vs 0.6079 |
+| Blending structurally diverse configs instead of more seeds | 0.5850 vs 0.5852 — ensembling has saturated |
+| Within-sample re-blocking augmentation (the 40 shipped blocks per sample are one partition out of ~10¹⁵) | 0.5320 vs 0.5861 **at matched optimizer updates** — the shipped partition is evidently not uniformly random |
+| Projection width 128 / hidden 320 / 22 epochs / column-loss 0 or 1 / pair dropout 0.25 | all neutral or worse |
 
 ## Notes
 
-* `working/solution_notes.md` — full scientific record, contract and fair negatives.
-* `working/research/` — research code (CV harness, feature builders, decoders, audits).
-* The model scores ~0.06 on the mouse/rat training rows and 0.598 on human. The test set is
-  entirely human, so this does not affect the delivered score, but it means ~6% of the
-  training rows contribute almost nothing.
+* `working/solution_notes.md` — full scientific record and contract; `working/experiments.jsonl`
+  — the run ledger; `working/research/` — CV harness, feature builders, decoders, audits.
+* **Memorisation audit.** A paired-pretrained antibody LM lifting the score raises a leakage
+  worry. The discriminator is a model that *cannot* have memorised: ESM-2 is trained on general
+  proteins and has never seen a VH/VL pairing, and it captured most of the lift on its own
+  (0.5224 alone). The ordering IgBert > AntiBERTa2 > ESM-2 > none is a smooth gradient in
+  antibody-domain specificity, not the discontinuity memorisation would produce.
+* **The min-over-families term.** A naive min-over-folds proxy read 0.5345, but that was
+  contaminated: the near-zero clusters are entirely mouse/rat (0.05–0.07) while human is 0.598.
+  The test set is 100% human, so the honest family risk is ~0.546 (5th percentile of simulated
+  7-sample human families).
 * `solution.py` downloads three checkpoints from the Hugging Face Hub at run time and requires
   `transformers` and a CUDA device. AntiBERTa2 is read with `BertTokenizer` rather than its
   `AutoTokenizer` to avoid an `rjieba` dependency; the substitution was verified to produce

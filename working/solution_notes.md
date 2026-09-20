@@ -212,11 +212,16 @@ block, balanced targets, true partner preserved, slots alphabetical, 3% of rows 
 block would have held two identical light chains). Measured: K=2 extra partitions scored 0.5375
 against a 0.5719 control, i.e. **-0.0364**.
 
-That test does not mean what it looks like. Tripling the data at a fixed 14 epochs triples the
-optimizer updates, and the sweep already showed 22 epochs overfitting (0.5651 vs 0.5768). The
-arm compared *3x the label exposure*, not re-blocking. A fair test holds updates constant
-(K=2 at ~5 epochs). Job stopped rather than burn 45 more minutes on two more confounded arms.
-Recorded as unresolved, not refuted.
+That first test was confounded: tripling the data at a fixed 14 epochs triples the optimizer
+updates, and the sweep had already shown 22 epochs overfitting (0.5651 vs 0.5768), so the arm
+compared *3x the label exposure*, not re-blocking.
+
+**Retested at matched updates (`abpair-rb2`, K=2 at 5 epochs vs K=0 at 14, 4 seeds, edrop 0.45):
+K2 0.5320 / human 0.5623 against control 0.5861 / human 0.6172 — still -0.054.** So it is not
+an exposure artifact; re-blocking genuinely hurts, and it is now a clean fair negative. The
+likely reason is that the shipped 40-blocks-per-sample partition is not a uniformly random one,
+so resampled blocks have a different statistical character from the blocks the model is scored
+on, and training on them shifts the model off the evaluation distribution.
 
 ## Fair negatives (do not retry without a new reason)
 - Probabilistic surprisal SHM clock (0.311 vs 0.364 for plain hamming).
