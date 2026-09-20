@@ -1,0 +1,5 @@
+/working/cache/
+/working/incumbent/
+/working/runs/*/outputs/
+/submission.csv
+/dataset_public/

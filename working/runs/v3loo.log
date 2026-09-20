@@ -1,0 +1,6 @@
+  [v3loo] fold 0 adj=0.5064 train=0.6047 [42s]
+  [v3loo] fold 1 adj=0.4809 train=0.6056 [84s]
+  [v3loo] fold 2 adj=0.4541 train=0.6121 [126s]
+  [v3loo] fold 3 adj=0.4945 train=0.6176 [168s]
+  [v3loo] fold 4 adj=0.4414 train=0.6134 [209s]
+== v3loo: OOF=0.4758 human=0.5053 minfold=0.4414 proxy=0.4672 nfeat=115

@@ -1,0 +1,21 @@
+  emb antiberta2: EH(30376, 1024) EL(25153, 1024)
+  [antiberta2] fold 0 adj=0.5599 [82s]
+  [antiberta2] fold 1 adj=0.5303 [162s]
+  [antiberta2] fold 2 adj=0.5053 [243s]
+  [antiberta2] fold 3 adj=0.5492 [321s]
+  [antiberta2] fold 4 adj=0.4885 [399s]
+== antiberta2: OOF=0.5269 human=0.5586 minfold=0.4885 proxy=0.5173
+  emb igbert: EH(30376, 1024) EL(25153, 1024)
+  [igbert] fold 0 adj=0.5700 [81s]
+  [igbert] fold 1 adj=0.5427 [160s]
+  [igbert] fold 2 adj=0.5230 [241s]
+  [igbert] fold 3 adj=0.5591 [319s]
+  [igbert] fold 4 adj=0.4963 [956s]
+== igbert: OOF=0.5383 human=0.5711 minfold=0.4963 proxy=0.5278
+  emb esm2: EH(30376, 1280) EL(25153, 1280)
+  [esm2] fold 0 adj=0.5533 [103s]
+  [esm2] fold 1 adj=0.5243 [202s]
+  [esm2] fold 2 adj=0.4951 [305s]
+  [esm2] fold 3 adj=0.5427 [404s]
+  [esm2] fold 4 adj=0.4945 [503s]
+== esm2: OOF=0.5224 human=0.5521 minfold=0.4945 proxy=0.5154

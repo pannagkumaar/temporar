@@ -1,0 +1,38 @@
+id: abpair-ft1
+keep_ready_minutes: 10
+description: >
+  Part A: frozen-LM ablation (none / IgBert / IgBert+AntiBERTa2 / all three), 5 folds x 3 seeds,
+  head trained on GPU, exact-marginal decode. Local CPU reference: base 0.4858, antiberta2
+  0.5269, igbert 0.5383. Part B: end-to-end fine-tune of IgBert with the listwise block loss,
+  probed on fold 0 where frozen IgBert scores 0.5700. Decides whether delivery ships frozen
+  embeddings or a fine-tuned encoder.
+entrypoint: bash -lc "pip install -q 'transformers==4.44.2' 'tokenizers<0.20' rjieba sentencepiece pandas && python working/runs/ft1/run.py"
+dataset: abpair-public
+compute:
+  type: gpu
+  profile: balanced
+  min_vram_gb: 24
+  preferred_gpu_models:
+    - NVIDIA A10G
+    - NVIDIA A10
+    - NVIDIA RTX A5000
+    - NVIDIA GeForce RTX 4090
+    - NVIDIA A40
+    - NVIDIA RTX A6000
+  min_ram_gb: 32
+  min_cpu_cores: 8
+  workspace_gb: 50
+  estimated_hours: 1.2
+limits:
+  max_runtime_hours: 1.8
+  max_cost_usd: 2.5
+artifacts:
+  save:
+    - metrics.json
+    - rawoof_base.npy
+    - rawoof_igbert.npy
+    - rawoof_antiberta2_igbert.npy
+    - rawoof_antiberta2_igbert_esm2.npy
+    - ft_fold0_ep0.npy
+    - ft_fold0_ep1.npy
+    - ft_fold0_ep2.npy

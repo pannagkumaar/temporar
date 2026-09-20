@@ -1,0 +1,13 @@
+# challenge data (supplied by the platform, not ours to redistribute)
+train.csv
+test.csv
+sample_submission.csv
+inst.html
+dataset_public/
+# remote-run artifacts and caches
+.mlctl/
+working/cache/
+working/runs/*/outputs/
+*.npy
+*.npz
+__pycache__/

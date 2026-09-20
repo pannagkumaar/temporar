@@ -1,0 +1,6 @@
+  [v3s3] fold 0 adj=0.5105 train=0.6047 [37s]
+  [v3s3] fold 1 adj=0.4826 train=0.6056 [73s]
+  [v3s3] fold 2 adj=0.4590 train=0.6121 [108s]
+  [v3s3] fold 3 adj=0.4984 train=0.6176 [144s]
+  [v3s3] fold 4 adj=0.4452 train=0.6134 [179s]
+== v3s3: OOF=0.4794 human=0.5084 minfold=0.4452 proxy=0.4709 nfeat=115

@@ -1,0 +1,38 @@
+id: abpair-emb3
+keep_ready_minutes: 10
+description: >
+  Frozen antibody-LM embeddings (AntiBERTa2 202M, IgBert 420M) for all 30k unique heavy and
+  ~30k unique light chains in train.csv. Tests whether a pretrained antibody LM carries
+  pairing signal beyond the germline-consensus SHM clock and gene lift tables (OOF 0.4758).
+  Embeddings are downloaded once; the decisive CV comparison then runs locally on CPU.
+entrypoint: bash -lc "pip install -q 'transformers==4.44.2' 'tokenizers<0.20' rjieba sentencepiece pandas && python -c 'import torch,transformers;print(torch.__version__,transformers.__version__)' && python working/runs/emb1/embed.py"
+dataset: abpair-public
+compute:
+  type: gpu
+  profile: balanced
+  min_vram_gb: 16
+  preferred_gpu_models:
+    - NVIDIA A10G
+    - NVIDIA A10
+    - NVIDIA RTX A5000
+    - NVIDIA RTX A4500
+    - NVIDIA GeForce RTX 4090
+    - NVIDIA A40
+  min_ram_gb: 24
+  min_cpu_cores: 4
+  workspace_gb: 40
+  estimated_hours: 0.5
+limits:
+  max_runtime_hours: 0.75
+  max_cost_usd: 1.2
+artifacts:
+  save:
+    - metrics.json
+    - antiberta2_heavy.npy
+    - antiberta2_light.npy
+    - igbert_heavy.npy
+    - igbert_light.npy
+    - esm2_heavy.npy
+    - esm2_light.npy
+    - heavy_seqs.txt
+    - light_seqs.txt

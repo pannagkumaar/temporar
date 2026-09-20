@@ -1,0 +1,12 @@
+  [v2-nores] fold 0 adj=0.4711 raw=0.4532 train=0.6433 [30s]
+  [v2-nores] fold 1 adj=0.4486 raw=0.4303 train=0.6546 [58s]
+  [v2-nores] fold 2 adj=0.4241 raw=0.4080 train=0.6579 [87s]
+  [v2-nores] fold 3 adj=0.4641 raw=0.4481 train=0.6614 [116s]
+  [v2-nores] fold 4 adj=0.4116 raw=0.3902 train=0.6529 [145s]
+== v2-nores: OOF=0.4441 human=0.4704 minfold=0.4116 proxy=0.4360
+  [v2-res] fold 0 adj=0.4505 raw=0.4274 train=0.7640 [36s]
+  [v2-res] fold 1 adj=0.4093 raw=0.3883 train=0.7658 [70s]
+  [v2-res] fold 2 adj=0.3927 raw=0.3740 train=0.7666 [107s]
+  [v2-res] fold 3 adj=0.4273 raw=0.4117 train=0.7731 [142s]
+  [v2-res] fold 4 adj=0.3860 raw=0.3679 train=0.7616 [177s]
+== v2-res: OOF=0.4135 human=0.4379 minfold=0.3860 proxy=0.4066

@@ -1,0 +1,30 @@
+id: abpair-pool1
+keep_ready_minutes: 10
+description: >
+  (1) Verifies BertTokenizer reproduces RoFormerTokenizer ids for AntiBERTa2 -- delivery depends
+  on that substitution to avoid an rjieba dependency at evaluation time. (2) Region-pooled LM
+  embeddings (whole chain / CDR3 span / FR3) vs mean pooling; reference mean-pooled 3-LM
+  OOF=0.5650. (3) Head hyperparameter sweep on the winning pooling.
+entrypoint: bash -lc "pip install -q 'transformers==4.44.2' 'tokenizers<0.20' rjieba sentencepiece pandas && python working/runs/pool1/run.py"
+dataset: abpair-public
+compute:
+  type: gpu
+  profile: balanced
+  min_vram_gb: 24
+  preferred_gpu_models:
+    - NVIDIA A10G
+    - NVIDIA A10
+    - NVIDIA RTX A5000
+    - NVIDIA GeForce RTX 4090
+    - NVIDIA A40
+    - NVIDIA RTX A6000
+  min_ram_gb: 32
+  min_cpu_cores: 8
+  workspace_gb: 50
+  estimated_hours: 1.0
+limits:
+  max_runtime_hours: 1.6
+  max_cost_usd: 2.5
+artifacts:
+  save:
+    - metrics.json
