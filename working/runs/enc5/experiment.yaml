@@ -1,0 +1,34 @@
+id: abpair-enc5
+keep_ready_minutes: 10
+description: >
+  A: the fourth encoder, retried with the memory bug fixed (model4 registered the whole
+  embedding matrix as a per-instance buffer = 40 copies of up to 2.2 GB, which stalled enc4;
+  model5 passes the tables in at forward time). antiberta2-cssp is structure-contrastive so it
+  may carry VH/VL interface geometry; IgBert_unpaired is a near-null control.
+  B: formulation challenger -- residue-level cross-chain interaction. The incumbent pools each
+  chain to one vector, so it cannot express which heavy residue contacts which light residue.
+  P=24 CDR3-anchored frozen-LM residue vectors per chain, learned PxP interaction weights.
+  Incumbent 16 seeds edrop 0.45: OOF 0.5904 / human 0.6221.
+entrypoint: bash -lc "pip install -q 'transformers==4.44.2' 'tokenizers<0.20' rjieba sentencepiece pandas && python working/runs/enc5/run.py"
+dataset: abpair-public
+compute:
+  type: gpu
+  profile: balanced
+  min_vram_gb: 24
+  preferred_gpu_models:
+    - NVIDIA A10G
+    - NVIDIA A10
+    - NVIDIA RTX A5000
+    - NVIDIA GeForce RTX 4090
+    - NVIDIA A40
+    - NVIDIA RTX A6000
+  min_ram_gb: 48
+  min_cpu_cores: 8
+  workspace_gb: 50
+  estimated_hours: 1.3
+limits:
+  max_runtime_hours: 2.0
+  max_cost_usd: 2.5
+artifacts:
+  save:
+    - metrics.json

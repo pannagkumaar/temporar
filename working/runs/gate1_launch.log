@@ -1,0 +1,4 @@
+{
+  "error": "BudgetError",
+  "message": "Maximum parallel GPU jobs already running."
+}

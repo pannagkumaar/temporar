@@ -1,0 +1,33 @@
+id: abpair-gate1
+keep_ready_minutes: 10
+description: >
+  Does the model need to know how much it can trust its own clock? The dominant features are
+  within-block SHM RANKS, which are always 0..7 whatever the block looks like; in a block of
+  eight near-germline cells they are noise, in a widely-spread block they are decisive. The
+  incumbent gets the ranks and the z-scores (which divide dispersion out) but never the
+  dispersion itself, so it applies one fixed amount of trust to both. v4 adds 12 block-level
+  gate features (heavy/light SHM spread, level, range, naive fraction and their interactions),
+  constant across a row's 8 candidates by construction. Incumbent OOF 0.5904 / human 0.6221.
+entrypoint: bash -lc "pip install -q 'transformers==4.44.2' 'tokenizers<0.20' rjieba sentencepiece pandas && python working/runs/gate1/run.py"
+dataset: abpair-public
+compute:
+  type: gpu
+  profile: balanced
+  min_vram_gb: 24
+  preferred_gpu_models:
+    - NVIDIA A10G
+    - NVIDIA A10
+    - NVIDIA RTX A5000
+    - NVIDIA GeForce RTX 4090
+    - NVIDIA A40
+    - NVIDIA RTX A6000
+  min_ram_gb: 48
+  min_cpu_cores: 8
+  workspace_gb: 50
+  estimated_hours: 1.0
+limits:
+  max_runtime_hours: 2.0
+  max_cost_usd: 2.5
+artifacts:
+  save:
+    - metrics.json

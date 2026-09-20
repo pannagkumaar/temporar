@@ -223,6 +223,56 @@ likely reason is that the shipped 40-blocks-per-sample partition is not a unifor
 so resampled blocks have a different statistical character from the blocks the model is scored
 on, and training on them shifts the model off the evaluation distribution.
 
+## Second maximize pass
+
+Control for all arms below: same folds, 8 seeds, embedding dropout 0.45 —
+**OOF 0.5885 / human 0.6211** (the 16-seed incumbent is 0.5904 / 0.6221; the gap is exactly the
+8-vs-16 seed difference, so the control is sound).
+
+### The fourth encoder — does not pay (`abpair-enc5`)
+| arm | OOF | human | vs control |
+|---|---|---|---|
+| control, 3 encoders | 0.5885 | 0.6211 | — |
+| + AntiBERTa2-CSSP (structure-contrastive) | 0.5875 | 0.6188 | **-0.0023** |
+| + IgBert_unpaired (near-null control) | 0.5888 | 0.6200 | -0.0011 |
+
+The stacking pattern that paid three times (IgBert +0.057, +AntiBERTa2 +0.011, +ESM-2 +0.010)
+has **saturated at three**. CSSP was the candidate with a mechanism behind it — contrastively
+pretrained against structure, so it might have carried VH/VL interface geometry — and it is the
+worse of the two. IgBert_unpaired behaved exactly as a near-null control should. Together they
+say the marginal encoder now costs more in head capacity than it returns in information,
+whether the new encoder is structurally novel or merely corpus-novel. The memory bug that
+stalled the previous attempt was real and is fixed (`model5` passes the embedding tables in at
+forward time instead of `register_buffer`-ing 2.2 GB into each of 40 model instances).
+
+### Residue-level cross-chain interaction — does not pay (formulation challenger)
+Each chain kept P=24 CDR3-anchored **frozen contextual** LM residue vectors (12 before CDR3
+covering the H91/L87 region, 6 at each CDR3 end); the pair score added a learned-weighted sum
+over all 24x24 residue-residue interactions. **0.5859 / human 0.6178, i.e. -0.0033, losing on
+4 of 5 folds.**
+
+This was a genuine alternative formulation, not a rename: the incumbent pools each chain to one
+vector and interacts the two bilinearly, so it *cannot* express "this heavy residue contacts
+that light residue", which is what the interface literature says drives pairing. It is also
+distinct from the earlier rejected per-position residue towers, which learned residue
+*identity* from scratch and memorised (train 0.76 / val 0.45). The verdict is informative:
+pooled-vector interaction is not leaving reachable residue-level information on the table.
+
+### Decoder is not the constraint (free, on saved OOF logits)
+Global marginal temperature: T=1.4 gives human 0.6224 against T=1.25's 0.6221 (+0.0003).
+Block-adaptive T, fitted per quintile of the block's logit spread, gives 0.6226 (+0.0005) — and
+the fitted temperatures are non-monotone (1.4, 1.6, 1.25, 1.9, 1.4), i.e. noise. Rejected; the
+delivered global T=1.25 stands.
+
+### Donor-difficulty diagnosis (what motivated the block-gate experiment)
+Human per-donor adjusted spans **0.425 to 0.793** across 91 donors. Correlations with donor
+score: mean SHM -0.343, SHM sd -0.225, heavy CDR3 length +0.201, within-block SHM dispersion
+-0.106. No single attribute is a clean lever, but the two hardest donors are near-naive
+repertoires (smp_168 mean SHM 0.026, smp_013 0.035) where the maturation clock has nothing to
+rank — which exposed a real gap, tested as `abpair-gate1`: the model receives within-block SHM
+**ranks** (always 0..7) and **z-scores** (which divide dispersion out) but never the dispersion
+itself, so it cannot tell an informative block from a degenerate one.
+
 ## Fair negatives (do not retry without a new reason)
 - Probabilistic surprisal SHM clock (0.311 vs 0.364 for plain hamming).
 - Two-pass germline consensus (identical to one-pass at every keep fraction).
