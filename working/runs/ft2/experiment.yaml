@@ -1,0 +1,32 @@
+id: abpair-ft2
+keep_ready_minutes: 10
+description: >
+  Reopens fine-tuning with a FAIR test. The earlier probe compared a sequence-only cross-encoder
+  (0.489) against frozen-LM-plus-features (0.570), which cannot separate "fine-tuning does not
+  help" from "sequences alone are weaker". Here AntiBERTa2 is fine-tuned per fold on that fold's
+  training blocks only, its pooled embeddings replace the frozen AntiBERTa2 inside the SAME full
+  model (features + frozen IgBert + frozen ESM-2), and the all-frozen control runs in the same
+  job. Incumbent folds [0.6026, 0.5863, 0.5562, 0.5889, 0.5345], OOF 0.5739.
+entrypoint: bash -lc "pip install -q 'transformers==4.44.2' 'tokenizers<0.20' rjieba sentencepiece pandas && python working/runs/ft2/run.py"
+dataset: abpair-public
+compute:
+  type: gpu
+  profile: balanced
+  min_vram_gb: 24
+  preferred_gpu_models:
+    - NVIDIA A10G
+    - NVIDIA A10
+    - NVIDIA RTX A5000
+    - NVIDIA GeForce RTX 4090
+    - NVIDIA A40
+    - NVIDIA RTX A6000
+  min_ram_gb: 32
+  min_cpu_cores: 8
+  workspace_gb: 50
+  estimated_hours: 1.5
+limits:
+  max_runtime_hours: 2.5
+  max_cost_usd: 3.0
+artifacts:
+  save:
+    - metrics.json

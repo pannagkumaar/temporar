@@ -1,0 +1,29 @@
+id: abpair-cold3
+keep_ready_minutes: 0
+description: >
+  Cold run of the delivered standalone solution.py exactly as the evaluator invokes it:
+  python3 solution.py <public_dataset_dir> <submission_csv>. Produces the submission and
+  measures end-to-end wall clock against the 90-minute platform budget.
+entrypoint: bash -lc "pip install -q 'transformers==4.44.2' 'tokenizers<0.20' sentencepiece pandas && python3 solution.py \"$DATA_ROOT\" \"$ARTIFACT_ROOT/submission.csv\""
+dataset: abpair-public
+compute:
+  type: gpu
+  profile: balanced
+  min_vram_gb: 24
+  preferred_gpu_models:
+    - NVIDIA A10G
+    - NVIDIA A10
+    - NVIDIA RTX A5000
+    - NVIDIA RTX A4500
+    - NVIDIA GeForce RTX 3090
+    - NVIDIA A40
+  min_ram_gb: 32
+  min_cpu_cores: 8
+  workspace_gb: 60
+  estimated_hours: 0.8
+limits:
+  max_runtime_hours: 1.5
+  max_cost_usd: 1.5
+artifacts:
+  save:
+    - submission.csv

@@ -1,0 +1,31 @@
+id: abpair-conf1
+keep_ready_minutes: 10
+description: >
+  Confirms the winning combination and fixes the delivery constants. sweep1 found two
+  independent wins over the 3-seed control (OOF 0.5768 / human 0.6079): seeds 3->8->16, and
+  embedding dropout 0.3->0.45 (+0.0073 OOF at 3 seeds). Regularisation and ensembling are
+  different mechanisms so they should compose, but that is an assumption. Arms: s16 at
+  edrop 0.30 / 0.45 / 0.55, edrop45+pdrop25, and s24 to see if the seed curve still pays.
+entrypoint: bash -lc "pip install -q 'transformers==4.44.2' 'tokenizers<0.20' rjieba sentencepiece pandas && python working/runs/conf1/run.py"
+dataset: abpair-public
+compute:
+  type: gpu
+  profile: balanced
+  min_vram_gb: 24
+  preferred_gpu_models:
+    - NVIDIA A10G
+    - NVIDIA A10
+    - NVIDIA RTX A5000
+    - NVIDIA GeForce RTX 4090
+    - NVIDIA A40
+    - NVIDIA RTX A6000
+  min_ram_gb: 32
+  min_cpu_cores: 8
+  workspace_gb: 50
+  estimated_hours: 1.0
+limits:
+  max_runtime_hours: 2.0
+  max_cost_usd: 2.5
+artifacts:
+  save:
+    - metrics.json

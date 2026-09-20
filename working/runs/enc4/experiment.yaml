@@ -1,0 +1,32 @@
+id: abpair-enc4
+keep_ready_minutes: 10
+description: >
+  Does a FOURTH encoder still pay? Each one so far did: IgBert +0.057, +AntiBERTa2 +0.011,
+  +ESM-2 +0.010 OOF. Candidates: antiberta2-cssp (same architecture as AntiBERTa2 but
+  contrastively pretrained against STRUCTURE, so it may carry VH/VL interface geometry the
+  sequence-only models cannot see -- this is the one with a mechanism behind it) and
+  IgBert_unpaired (same architecture as IgBert, different corpus; expected near-null control).
+  Best known head settings: 16 seeds, embedding dropout 0.45, OOF 0.5904 / human 0.6221.
+entrypoint: bash -lc "pip install -q 'transformers==4.44.2' 'tokenizers<0.20' rjieba sentencepiece pandas && python working/runs/enc4/run.py"
+dataset: abpair-public
+compute:
+  type: gpu
+  profile: balanced
+  min_vram_gb: 24
+  preferred_gpu_models:
+    - NVIDIA A10G
+    - NVIDIA A10
+    - NVIDIA RTX A5000
+    - NVIDIA GeForce RTX 4090
+    - NVIDIA A40
+    - NVIDIA RTX A6000
+  min_ram_gb: 32
+  min_cpu_cores: 8
+  workspace_gb: 50
+  estimated_hours: 1.0
+limits:
+  max_runtime_hours: 2.0
+  max_cost_usd: 2.5
+artifacts:
+  save:
+    - metrics.json

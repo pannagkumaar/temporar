@@ -150,6 +150,74 @@ mean 0.6011, p5 0.5459, min 0.5156.
 rows — so the pipeline is proven end to end and the delivered plan sits at roughly 16-24% of a
 90-minute budget even allowing an A10G to be ~1.5x slower.
 
+## Maximize pass (second invocation)
+
+Diagnosis first: the incumbent's decoded errors show **no structural defect**. Top-1 is 42.9%
+against a 12.5% chance rate, the rank histogram decays smoothly, top-1 marginal calibration is
+monotone and well ordered (conf 0.26 -> acc 0.21, conf 0.95 -> acc 0.86), there is no
+kappa/lambda asymmetry (0.603 / 0.612) and no subgroup collapse. That rules out decoder,
+preprocessing and validation faults and points at representation and capacity.
+
+### Capacity / budget sweep (`abpair-sweep1`, 5 folds, control = 3 seeds, OOF 0.5768 / human 0.6079)
+| arm | OOF | human | verdict |
+|---|---|---|---|
+| seeds 1 | 0.5584 | 0.5884 | — |
+| seeds 8 | 0.5826 | 0.6150 | **+0.0071 human** |
+| seeds 16 | 0.5852 | 0.6168 | **+0.0089 human** |
+| **embedding dropout 0.45** | 0.5841 | 0.6149 | **+0.0070 human at only 3 seeds** |
+| human-only training | 0.5765 | 0.6077 | **dead heat** — mouse/rat rows neither help nor hurt |
+| per-seed marginal averaging | 0.5820 | 0.6140 | slightly worse than logit averaging |
+| projection width 128 | 0.5706 | 0.6025 | rejected |
+| hidden 320 | 0.5741 | 0.6061 | neutral |
+| 22 epochs | 0.5651 | 0.5975 | rejected, overfits |
+| column loss 1.0 / 0.0 | 0.5743 / 0.5762 | 0.6065 / 0.6087 | neutral, keep 0.5 |
+| pair dropout 0.25 | 0.5760 | 0.6081 | neutral |
+
+Only two knobs move anything, and they are different mechanisms: **ensembling** and
+**regularising the embedding towers**. Everything else is inside the noise. Note the delivered
+8-seed recipe was therefore already worth ~0.583 OOF / 0.615 human, not the 0.5739 / 0.6067 I
+had quoted from the 3-seed sweep.
+
+### Fine-tuning, retested fairly (`abpair-ft2`)
+The first probe was not a fair test — it compared a sequence-only cross-encoder against
+frozen-LM-plus-features. Retested properly: AntiBERTa2 fine-tuned per fold on that fold's
+training blocks only, its pooled embeddings substituted for the frozen ones inside the *same*
+full model. The all-frozen control reproduced the incumbent exactly (fold 0: 0.6026 vs 0.6026),
+so the comparison is clean. **Fine-tuned: 0.5968, i.e. -0.0058.** Training loss fell 2.71 ->
+2.35 -> 1.90, the signature of a 202M encoder memorising ~3000 blocks and losing the general
+representation that transfers across the donor boundary. Consistent with ImmunoMatch's published
+drop from 0.75 in-distribution to 0.66 on external donors. Stopped after one fold on low
+decision value: the mechanism needed a large win to justify ~30 min of evaluator runtime, and a
+negative first fold rules that out. Not refuted — one fold — but not worth further spend.
+
+### Confirming the combination (`abpair-conf1`, 5 folds, 16 seeds)
+| arm | OOF | human |
+|---|---|---|
+| edrop 0.30 | 0.5852 | 0.6168 |
+| **edrop 0.45** | **0.5904** | **0.6221** |
+| edrop 0.55 | 0.5846 | 0.6154 |
+| edrop 0.45 + pdrop 0.25 | 0.5912 | 0.6223 |
+
+The two wins compose (+0.0053 over edrop 0.30 at the same seeds) and embedding dropout has a
+sharp interior optimum at 0.45. Adding pair dropout on top moves OOF by +0.0008 and human by
++0.0002 — below what this split resolves — so it is not taken; fewer changes from the verified
+path. The edrop-0.30 arm reproduced sweep1 exactly (0.5852 / 0.6168 in both jobs).
+
+**Promoted to delivery: 16 seeds, embedding dropout 0.45. OOF 0.5904 / human 0.6221.**
+
+### Re-blocking augmentation (`abpair-rb1`) — CONFOUNDED, not a clean negative
+The 3797 shipped blocks are one arbitrary partition of each sample's 320 cells out of ~2.5e15
+valid ones. Re-partitioning within sample was verified structurally sound (bijection in every
+block, balanced targets, true partner preserved, slots alphabetical, 3% of rows dropped where a
+block would have held two identical light chains). Measured: K=2 extra partitions scored 0.5375
+against a 0.5719 control, i.e. **-0.0364**.
+
+That test does not mean what it looks like. Tripling the data at a fixed 14 epochs triples the
+optimizer updates, and the sweep already showed 22 epochs overfitting (0.5651 vs 0.5768). The
+arm compared *3x the label exposure*, not re-blocking. A fair test holds updates constant
+(K=2 at ~5 epochs). Job stopped rather than burn 45 more minutes on two more confounded arms.
+Recorded as unresolved, not refuted.
+
 ## Fair negatives (do not retry without a new reason)
 - Probabilistic surprisal SHM clock (0.311 vs 0.364 for plain hamming).
 - Two-pass germline consensus (identical to one-pass at every keep fraction).

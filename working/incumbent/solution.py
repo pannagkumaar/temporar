@@ -18,10 +18,23 @@ history. Three signals carry that, in descending order of measured strength:
    granularities (gene, family, locus, J, CDR3-length bucket). Training rows are scored with
    their own observation removed from the table (exact leave-one-out); without that the feature
    leaks its own label and the model over-trusts it.
-3. Pretrained sequence representation. Frozen mean-pooled embeddings of both chains from three
-   encoders concatenated (AntiBERTa2 202M, IgBert 420M, ESM-2 650M), entering through learned
-   projections and a bilinear interaction. Each encoder added score on the same folds:
-   none 0.4874 -> IgBert 0.5445 -> +AntiBERTa2 0.5552 -> +ESM-2 0.5650 OOF adjusted.
+3. Pretrained sequence representation. Frozen embeddings of both chains from three encoders
+   concatenated (AntiBERTa2 202M, IgBert 420M, ESM-2 650M), pooled twice per chain (whole chain
+   and CDR3 span), entering through learned projections and a bilinear interaction. Each
+   encoder added score on the same folds: none 0.4874 -> IgBert 0.5445 -> +AntiBERTa2 0.5552
+   -> +ESM-2 0.5650, and CDR3-span pooling -> 0.5739 (OOF adjusted, 3 seeds).
+
+The encoders are used frozen. Fine-tuning AntiBERTa2 per fold with this same listwise loss and
+substituting its embeddings scores 0.5968 against 0.6026 for frozen on fold 0: a 202M encoder
+memorises ~3000 blocks (training loss 2.71 -> 1.90) and loses the general representation that
+transfers across the donor boundary.
+
+Head settings are the measured optimum, not defaults. Embedding dropout peaks sharply at 0.45
+(0.30 -> 0.5852, 0.45 -> 0.5904, 0.55 -> 0.5846 OOF at 16 seeds) because the 6656-dimensional
+embedding towers are where this model overfits. Seed averaging pays to ~16 and then saturates
+(1 -> 0.5584, 3 -> 0.5768, 8 -> 0.5826, 16 -> 0.5852); blending structurally diverse
+configurations instead of seeds gives nothing extra (0.5850).
+Final: **OOF adjusted 0.5904, human-only 0.6221.**
 
 Decoding
 --------
@@ -69,7 +82,7 @@ LM_SPECS = (('alchemab/antiberta2', BertTokenizer),
             ('facebook/esm2_t33_650M_UR50D', AutoTokenizer))
 LM_MAXLEN = 160
 LM_BATCH = 64
-N_SEEDS = 8
+N_SEEDS = 16
 EPOCHS = 14
 BLOCKS_PER_BATCH = 96
 LR = 3e-3
@@ -78,7 +91,7 @@ HID = 192
 DGENE = 48
 DEMB = 64
 PDROP = 0.15
-EDROP = 0.3
+EDROP = 0.45
 COLW = 0.5
 SINK_TRAIN = 6
 MARGINAL_T = 1.25

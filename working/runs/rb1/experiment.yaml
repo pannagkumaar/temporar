@@ -1,0 +1,31 @@
+id: abpair-rb1
+keep_ready_minutes: 10
+description: >
+  Structural challenger: within-sample re-blocking augmentation. The 3797 shipped blocks are one
+  arbitrary partition of each sample's 320 cells out of ~2.5e15 valid ones, so the incumbent sees
+  every negative pair in fixed company and every block-relative feature at one realisation. Arms
+  K=0 (control) / K=2 / K=6 extra partitions per fold, plus K=6 with a longer schedule.
+  Incumbent folds [0.6026, 0.5863, 0.5562, 0.5889, 0.5345], OOF 0.5739, human 0.6067.
+entrypoint: bash -lc "pip install -q 'transformers==4.44.2' 'tokenizers<0.20' rjieba sentencepiece pandas && python working/runs/rb1/run.py"
+dataset: abpair-public
+compute:
+  type: gpu
+  profile: balanced
+  min_vram_gb: 24
+  preferred_gpu_models:
+    - NVIDIA A10G
+    - NVIDIA A10
+    - NVIDIA RTX A5000
+    - NVIDIA GeForce RTX 4090
+    - NVIDIA A40
+    - NVIDIA RTX A6000
+  min_ram_gb: 48
+  min_cpu_cores: 8
+  workspace_gb: 50
+  estimated_hours: 1.5
+limits:
+  max_runtime_hours: 2.5
+  max_cost_usd: 3.0
+artifacts:
+  save:
+    - metrics.json
