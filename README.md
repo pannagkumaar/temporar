@@ -68,6 +68,11 @@ pays `(8-rank)/7`, which is maximised by ranking candidates by their **true marg
 | Human-only training (mouse/rat rows score 0.06) | dead heat, 0.6077 vs 0.6079 |
 | Blending structurally diverse configs instead of more seeds | 0.5850 vs 0.5852 — ensembling has saturated |
 | Within-sample re-blocking augmentation (the 40 shipped blocks per sample are one partition out of ~10¹⁵) | 0.5320 vs 0.5861 **at matched optimizer updates** — the shipped partition is evidently not uniformly random |
+| A 4th encoder - AntiBERTa2-CSSP (structure-contrastive, the one with a mechanism) | 0.6188 vs 0.6211 control; encoder stacking saturates at 3 |
+| A 4th encoder - IgBert_unpaired (near-null control) | 0.6200 vs 0.6211 |
+| Residue-level cross-chain interaction (24 CDR3-anchored frozen-LM residue vectors per chain, learned 24x24 interaction weights) | 0.6178 vs 0.6211, losing on 4/5 folds - pooled-vector interaction is not leaving reachable residue information behind |
+| Block-level SHM-dispersion gate features | no effect (+/-0.001, below resolution) in two independent runs |
+| Marginal temperature, global sweep and block-adaptive | +0.0003 / +0.0005 - noise, with non-monotone fitted temperatures |
 | Projection width 128 / hidden 320 / 22 epochs / column-loss 0 or 1 / pair dropout 0.25 | all neutral or worse |
 
 ## Notes

@@ -273,6 +273,25 @@ rank — which exposed a real gap, tested as `abpair-gate1`: the model receives 
 **ranks** (always 0..7) and **z-scores** (which divide dispersion out) but never the dispersion
 itself, so it cannot tell an informative block from a degenerate one.
 
+### Block-gate features — no effect (`abpair-gate1` + independent local replication)
+12 block-level gate features added (heavy/light SHM spread, level, range, naive fraction and
+their interactions), constant across a row's 8 candidates by construction.
+
+| comparison | v3 | v4 gate | delta |
+|---|---|---|---|
+| GPU, 8 seeds, matched in one job (human) | 0.6211 | 0.6201 | **-0.0010** |
+| GPU, 16 seeds vs the 16-seed incumbent (human) | 0.6221 | 0.6230 | +0.0009 |
+| Local CPU, mean-pooled embeddings, 3 seeds (human) | 0.5987 | 0.5970 | -0.0017 |
+
+The two clean matched comparisons (same job, same folds, same seeds; and an independent local
+replication at a different pooling level) both come out slightly negative; the only positive is
+a cross-job 16-seed comparison with no matched v3-at-16-seeds arm beside it. Every magnitude is
+around 0.001, far below the ~0.005 this split resolves. **Verdict: no effect.** The diagnosed
+gap is real as a description — the model genuinely never sees block dispersion — but closing it
+does not buy score, so the z-scores and raw SHM values it already receives evidently carry
+enough, or the gate is simply not the binding constraint. Not promoted: changing a cold-run-
+verified recipe for a noise-level effect would cost another cold run for no expected gain.
+
 ## Fair negatives (do not retry without a new reason)
 - Probabilistic surprisal SHM clock (0.311 vs 0.364 for plain hamming).
 - Two-pass germline consensus (identical to one-pass at every keep fraction).
